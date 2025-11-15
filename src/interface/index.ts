@@ -22,10 +22,11 @@ export interface AishType {
     area: string;
     isNewUserPost: boolean;
     author: string;
+    publishTime: string;
     replyCount: number;
     readCount: number;
     lastReplier: string;
-    lastReplyTime: Date;
+    lastReplyTime: string;
 }
 
 export interface StatisticsType {
@@ -72,8 +73,18 @@ export interface QueryParams {
 
 export interface ApiResponse<T> {
     code: number;
+    msg: string;
     data: {
         list: T[];
         total: number;
+    };
+}
+
+export interface LoginResponse {
+    code: number;
+    msg: string;
+    data?: {
+        user_id: number;
+        username: string;
     };
 }

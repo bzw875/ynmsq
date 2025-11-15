@@ -8,10 +8,13 @@ import {
     StatisticsType,
     QueryParams,
     ApiResponse,
-    UserInfo
+    UserInfo,
+    LoginResponse,
+    AishType
 } from '../interface';
 
-const baseURL = __DEV__ ? '/api' : '/api';
+// 根据文档，服务器地址为 http://115.190.240.212:80
+const baseURL = 'http://115.190.240.212';
 
 class ApiService {
     private instance: AxiosInstance;
@@ -40,25 +43,11 @@ class ApiService {
 
     private setupInterceptors() {
         // 请求拦截器
+        // 注意：根据文档，认证使用 Cookie，不需要设置 Authorization header
+        // withCredentials: true 已经设置，会自动发送 Cookie
         this.instance.interceptors.request.use(
             async (config) => {
-                try {
-                    // 优先使用显式设置的token
-                    if (this.authToken) {
-                        config.headers.Authorization = `Bearer ${this.authToken}`;
-                    } else {
-                        // 其次从AsyncStorage获取
-                        const userInfoStr = await AsyncStorage.getItem('userInfo');
-                        if (userInfoStr) {
-                            const userInfo: UserInfo = JSON.parse(userInfoStr);
-                            if (userInfo.token) {
-                                config.headers.Authorization = `Bearer ${userInfo.token}`;
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error getting user info from storage:', error);
-                }
+                // 可以在这里添加其他请求头或处理逻辑
                 return config;
             },
             (error) => {
@@ -70,7 +59,11 @@ class ApiService {
         this.instance.interceptors.response.use(
             async (response) => {
                 if (response.data.code === 401) {
+                    // 清除本地存储的认证信息
                     await AsyncStorage.removeItem('userInfo');
+                    await AsyncStorage.removeItem('userToken');
+                    await AsyncStorage.removeItem('userData');
+                    this.authToken = '';
                 }
                 return response;
             },
@@ -81,67 +74,101 @@ class ApiService {
         );
     }
 
+    // 认证相关接口
+    public login(username: string, password: string): Promise<AxiosResponse<LoginResponse>> {
+        return this.instance.post<LoginResponse>(
+            '/api/auth/login',
+            {
+                username,
+                password,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+    }
+
+    public logout(): Promise<AxiosResponse<{ code: number; msg: string }>> {
+        return this.instance.post<{ code: number; msg: string }>('/api/auth/logout');
+    }
+
+    // 树洞相关接口
     public fetchAllTreeHole(params: QueryParams): Promise<AxiosResponse<ApiResponse<TreeHoleType>>> {
-        const p = {
-            ...params,
-            likeRange: params.likeRange === RangeNum.NoLimit ? '' : params.likeRange,
-            page: String(params.page),
-            size: String(params.size),
+        const queryParams: any = {
+            page: params.page,
+            size: params.size,
         };
+        
+        if (params.field) {
+            queryParams.field = params.field;
+        }
+        
+        if (params.sort) {
+            queryParams.sort = params.sort;
+        }
+        
+        if (params.likeRange && params.likeRange !== RangeNum.NoLimit) {
+            queryParams.likeRange = params.likeRange;
+        }
+        
         return this.instance.get<ApiResponse<TreeHoleType>>(
-            `/treehole?${new URLSearchParams(p as any)}`
+            '/api/treehole',
+            { params: queryParams }
         );
     }
 
     public findByAuthor(author: string): Promise<AxiosResponse<ApiResponse<TreeHoleType>>> {
         return this.instance.get<ApiResponse<TreeHoleType>>(
-            `/treehole/author/${author}`
+            `/api/treehole/author/${encodeURIComponent(author)}`
         );
     }
 
     public searchTreeHole(keyword: string): Promise<AxiosResponse<ApiResponse<TreeHoleType>>> {
         return this.instance.get<ApiResponse<TreeHoleType>>(
-            `/treehole/search?q=${encodeURIComponent(keyword)}`
-        );
-    }
-
-    public login(username: string, password: string): Promise<AxiosResponse<any>> {
-        return this.instance.get(
-            `/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            '/api/treehole/search',
+            { params: { q: keyword } }
         );
     }
 
     public fetchStatistics(): Promise<AxiosResponse<ApiResponse<StatisticsType>>> {
-        return this.instance.get<ApiResponse<StatisticsType>>('/treehole/static');
+        return this.instance.get<ApiResponse<StatisticsType>>('/api/treehole/static');
     }
 
-    public fetchAish123(): Promise<AxiosResponse<ApiResponse<TreeHoleType>>> {
-        return this.instance.get<ApiResponse<TreeHoleType>>('/aish/posts');
+    // AISH 相关接口
+    public fetchAish123(): Promise<AxiosResponse<ApiResponse<AishType>>> {
+        return this.instance.get<ApiResponse<AishType>>('/api/aish/posts');
     }
 
-    public queryQwen(prompt: string): Promise<AxiosResponse<any>> {
-        return this.instance.post('/agent/qwen', {
-            prompt,
+    // Agent 相关接口
+    public queryAi(prompt: string, model?: string): Promise<AxiosResponse<any>> {
+        // 根据文档，豆包 Agent 接口使用 OpenAI 兼容格式
+        const data = {
+            model: model || 'ep-20241208123456-abcde', // 默认模型，可以根据需要修改
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt,
+                },
+            ],
+            temperature: 0.7,
+            max_tokens: 2000,
+        };
+        return this.instance.post('/api/agent/doubao', data, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
     }
 
-    public queryAi(prompt: string): Promise<AxiosResponse<any>> {
-        const data = {
-            model: 'doubao-seed-1-6-flash-250615',
-            messages: [
-                {
-                    content: [
-                        {
-                            text: prompt,
-                            type: 'text',
-                        },
-                    ],
-                    role: 'user',
-                },
-            ],
-            stream: false,
-        };
-        return this.instance.post('/agent/doubao', data);
+    // 文心一言接口（如果服务器支持）
+    public queryWenXin(prompt: string): Promise<AxiosResponse<any>> {
+        // 注意：文档中没有文心一言接口，这里保留原有逻辑
+        // 如果服务器不支持，可能需要删除或修改此方法
+        return this.instance.post('/api/agent/qwen', {
+            prompt,
+        });
     }
 }
 

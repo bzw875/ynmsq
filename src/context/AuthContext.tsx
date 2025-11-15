@@ -39,17 +39,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const bootstrapAsync = async () => {
             try {
-                const token = await AsyncStorage.getItem('userToken');
                 const userData = await AsyncStorage.getItem('userData');
                 
-                if (token && userData) {
+                if (userData) {
                     const parsedUser = JSON.parse(userData);
                     setUser({
-                        ...parsedUser,
-                        token,
+                        id: parsedUser.id,
+                        username: parsedUser.username,
+                        email: parsedUser.email || '',
+                        token: '', // 使用 Cookie 认证，不需要 token
                     });
-                    // 设置API服务的默认token
-                    apiService.setAuthToken(token);
+                    // 注意：认证通过 Cookie 管理，不需要设置 token
                 }
             } catch (e) {
                 console.error('Failed to load auth data from storage', e);
@@ -66,26 +66,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsLoading(true);
             const response = await apiService.login(username, password);
             
-            if (response.data.code === 200) {
+            if (response.data.code === 200 && response.data.data) {
                 const userData = response.data.data;
                 const userInfo = {
-                    id: userData.id,
+                    id: userData.user_id,
                     username: userData.username,
-                    email: userData.email,
-                    token: userData.token,
+                    email: '', // 服务器响应中没有 email 字段
+                    token: '', // 使用 Cookie 认证，不需要存储 token
                 };
                 
-                // 保存到AsyncStorage
-                await AsyncStorage.setItem('userToken', userData.token);
+                // 保存到AsyncStorage（仅保存用户信息，token 通过 Cookie 管理）
                 await AsyncStorage.setItem('userData', JSON.stringify({
-                    id: userData.id,
+                    id: userData.user_id,
                     username: userData.username,
-                    email: userData.email,
                 }));
                 
-                // 设置全局用户状态和API token
+                // 设置全局用户状态
+                // 注意：认证通过 Cookie 管理，不需要设置 token
                 setUser(userInfo);
-                apiService.setAuthToken(userData.token);
                 return true;
             }
             return false;
@@ -99,11 +97,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const logout = async () => {
         try {
+            // 调用服务器登出接口
+            try {
+                await apiService.logout();
+            } catch (error) {
+                console.error('Logout API call failed', error);
+            }
+            
             // 移除存储的认证信息
             await AsyncStorage.removeItem('userToken');
             await AsyncStorage.removeItem('userData');
             
-            // 清除全局状态和API token
+            // 清除全局状态
             setUser(null);
             apiService.setAuthToken('');
         } catch (error) {

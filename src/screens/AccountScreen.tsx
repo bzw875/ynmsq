@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 
@@ -32,17 +33,14 @@ const AccountScreen: React.FC = () => {
     const checkLoginStatus = async () => {
         try {
             setLoading(true);
-            // 模拟检查登录状态
-            // 在实际应用中，这里应该调用API或检查本地存储的token
-            const token = await apiService.getToken();
-            if (token) {
-                // 模拟获取用户信息
-                // const userInfo = await apiService.getUserInfo();
-                // 这里使用mock数据
+            // 检查本地存储的用户信息
+            const userDataStr = await AsyncStorage.getItem('userData');
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
                 setUserData({
-                    username: '测试用户',
+                    username: userData.username || '用户',
                     avatar: '👤',
-                    email: 'test@example.com',
+                    email: userData.email || '',
                 });
                 setIsLogin(true);
             }
@@ -55,28 +53,8 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleLogin = async () => {
-        try {
-            setLoading(true);
-            // 这里应该导航到登录页面
-            // 由于没有实现登录页面，这里使用模拟数据进行演示
-            const response = await apiService.login('test', 'password');
-            if (response.data.code === 200) {
-                setUserData({
-                    username: '测试用户',
-                    avatar: '👤',
-                    email: 'test@example.com',
-                });
-                setIsLogin(true);
-                Alert.alert('登录成功', '欢迎回来！');
-            } else {
-                Alert.alert('登录失败', response.data.message || '请检查用户名和密码');
-            }
-        } catch (error) {
-            console.error('登录失败:', error);
-            Alert.alert('登录失败', '请稍后再试');
-        } finally {
-            setLoading(false);
-        }
+        // 导航到登录页面
+        navigation.navigate('Login' as never);
     };
 
     const handleLogout = async () => {

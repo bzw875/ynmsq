@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Picker, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { SortEnum, FieldEnum } from '../interface';
 
 interface NavigatorBarProps {

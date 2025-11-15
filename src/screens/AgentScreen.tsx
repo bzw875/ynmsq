@@ -42,11 +42,20 @@ const AgentScreen: React.FC = () => {
         setLoading(true);
         try {
             const response = await apiService.queryAi(promptInput);
+            // 根据文档，豆包接口返回 OpenAI 兼容格式
             if (response.data && response.data.choices && response.data.choices[0]) {
-                setSuggestions(response.data.choices[0].message.content);
+                const content = response.data.choices[0].message?.content;
+                if (content) {
+                    setSuggestions(content);
+                } else {
+                    setSuggestions('AI 返回了空内容');
+                }
+            } else {
+                setSuggestions('AI 响应格式异常');
             }
         } catch (error) {
             console.error('AI 请求错误:', error);
+            setSuggestions('请求失败，请稍后再试');
         } finally {
             setLoading(false);
         }

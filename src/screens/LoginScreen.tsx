@@ -53,7 +53,7 @@ const LoginScreen: React.FC = () => {
                 // 导航回上一页或账户页面
                 navigation.goBack();
             } else {
-                Alert.alert('登录失败', response.data.message || '请检查用户名和密码');
+                Alert.alert('登录失败', response.data.msg || '请检查用户名和密码');
             }
         } catch (error) {
             console.error('登录失败:', error);

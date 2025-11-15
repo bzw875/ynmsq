@@ -9,11 +9,10 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { apiService } from '../services/api';
-import { TreeHoleType } from '../interface';
-import TreeHoleCell from '../components/TreeHoleCell';
+import { AishType } from '../interface';
 
 const Aish123Screen: React.FC = () => {
-    const [posts, setPosts] = useState<TreeHoleType[]>([]);
+    const [posts, setPosts] = useState<AishType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -33,8 +32,21 @@ const Aish123Screen: React.FC = () => {
         }
     };
 
-    const renderItem = ({ item }: { item: TreeHoleType }) => (
-        <TreeHoleCell treeHole={item} />
+    const renderItem = ({ item }: { item: AishType }) => (
+        <View style={styles.postItem}>
+            <Text style={styles.postTitle}>{item.title}</Text>
+            <Text style={styles.postAuthor}>作者: {item.author}</Text>
+            <Text style={styles.postPublishTime}>发布时间: {item.publishTime}</Text>
+            <Text style={styles.postInfo}>
+                回复: {item.replyCount} | 阅读: {item.readCount}
+            </Text>
+            <Text style={styles.postArea}>地区: {item.area}</Text>
+            {item.lastReplier && (
+                <Text style={styles.postLastReply}>
+                    最后回复: {item.lastReplier} ({item.lastReplyTime})
+                </Text>
+            )}
+        </View>
     );
 
     if (isLoading) {
@@ -53,7 +65,7 @@ const Aish123Screen: React.FC = () => {
             <FlatList
                 data={posts}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item, index) => item.articleId || index.toString()}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <Text style={styles.emptyText}>暂无内容</Text>
@@ -94,6 +106,53 @@ const styles = StyleSheet.create({
         color: '#8E8E93',
         textAlign: 'center',
         marginTop: 50,
+    },
+    postItem: {
+        backgroundColor: '#fff',
+        padding: 16,
+        marginBottom: 12,
+        marginHorizontal: 16,
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    postTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#000',
+    },
+    postAuthor: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 4,
+    },
+    postPublishTime: {
+        fontSize: 12,
+        color: '#8E8E93',
+        marginBottom: 4,
+    },
+    postInfo: {
+        fontSize: 12,
+        color: '#8E8E93',
+        marginBottom: 4,
+    },
+    postArea: {
+        fontSize: 12,
+        color: '#8E8E93',
+        marginBottom: 4,
+    },
+    postLastReply: {
+        fontSize: 12,
+        color: '#8E8E93',
+        marginTop: 8,
+        fontStyle: 'italic',
     },
 });
 
