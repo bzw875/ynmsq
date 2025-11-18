@@ -24,7 +24,7 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
         if (pages === 0) return [];
         
         const arr = [page];
-        const offset = 5;
+        const offset = 3;
         
         for (let i = page + 1; i < Math.min(page + offset, pages); i++) {
             arr.push(i);
@@ -34,6 +34,14 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
             if (j >= 0) {
                 arr.unshift(j);
             }
+        }
+
+        if (!arr.includes(0)) {
+            arr.unshift(0);
+        }
+
+        if (!arr.includes(pages - 1)) {
+            arr.push(pages - 1);
         }
         
         return arr;
@@ -49,7 +57,7 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
             <View style={styles.pagination}>
                 {page > 0 && (
                     <TouchableOpacity onPress={() => onPageChange(page - 1)}>
-                        <Text style={styles.paginationButton}>上一页</Text>
+                        <Text style={styles.paginationButton}>上页</Text>
                     </TouchableOpacity>
                 )}
                 
@@ -75,7 +83,7 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
                 
                 {page < pages - 1 && (
                     <TouchableOpacity onPress={() => onPageChange(page + 1)}>
-                        <Text style={styles.paginationButton}>下一页</Text>
+                        <Text style={styles.paginationButton}>下页</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -88,8 +96,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
         backgroundColor: '#f8f8f8',
         flexWrap: 'wrap',
     },
@@ -99,14 +105,14 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     paginationButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        marginHorizontal: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        backgroundColor: '#f2f2f2',
         color: '#007AFF',
     },
     pageButton: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingHorizontal: 5,
+        paddingVertical: 3,
         marginHorizontal: 2,
         borderRadius: 4,
     },

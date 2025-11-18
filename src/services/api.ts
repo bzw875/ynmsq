@@ -1,18 +1,16 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-    SortEnum,
-    FieldEnum,
     RangeNum,
     TreeHoleType,
     StatisticsType,
     QueryParams,
     ApiResponse,
-    UserInfo,
     LoginResponse,
     AishType
 } from '../interface';
-
+import { navigate } from '../utils/navigationRef';
+    
 // 根据文档，服务器地址为 http://115.190.240.212:80
 const baseURL = 'http://115.190.240.212';
 
@@ -64,11 +62,25 @@ class ApiService {
                     await AsyncStorage.removeItem('userToken');
                     await AsyncStorage.removeItem('userData');
                     this.authToken = '';
+                    // 跳转到登录页
+                    navigate('Login');
+                    // 拒绝响应，避免调用方继续处理
+                    return Promise.reject(new Error('未授权，请重新登录'));
                 }
                 return response;
             },
-            (error) => {
+            async (error) => {
                 console.log('API Error:', error);
+                // 处理HTTP状态码401
+                if (error.response && error.response.status === 401) {
+                    // 清除本地存储的认证信息
+                    await AsyncStorage.removeItem('userInfo');
+                    await AsyncStorage.removeItem('userToken');
+                    await AsyncStorage.removeItem('userData');
+                    this.authToken = '';
+                    // 跳转到登录页
+                    navigate('Login');
+                }
                 return Promise.reject(error);
             }
         );

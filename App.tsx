@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text, View } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
+import { navigationRef } from './src/utils/navigationRef';
 
 // 导入所有屏幕
 import HomeScreen from './src/screens/HomeScreen';
@@ -104,7 +105,7 @@ function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <RootStack />
         </NavigationContainer>
       </AuthProvider>

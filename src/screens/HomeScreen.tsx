@@ -23,9 +23,11 @@ import NavigatorBar from '../components/NavigatorBar';
 import FilterBar from '../components/FilterBar';
 import { debounce } from '../utils';
 
+const PAGE_SIZE = 20;
+
 export const DEFAULT_QUERY: QueryParams = {
     page: 0,
-    size: 10,
+    size: PAGE_SIZE,
     field: FieldEnum.DATE,
     sort: SortEnum.DESC,
     likeRange: RangeNum.NoLimit,
@@ -48,16 +50,13 @@ const HomeScreen: React.FC = () => {
     const [treeHoles, setTreeHoles] = useState<TreeHoleType[]>([]);
     const [page, setPage] = useState(initialParams.page || DEFAULT_QUERY.page);
     const [total, setTotal] = useState(0);
-    const [field, setField] = useState(initialParams.field || DEFAULT_QUERY.field);
-    const [sort, setSort] = useState(initialParams.sort || DEFAULT_QUERY.sort);
     const [likeRange, setLikeRange] = useState(initialParams.likeRange || DEFAULT_QUERY.likeRange);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const size = 10;
+    const size = PAGE_SIZE;
 
     const handleQuery = async (
         currentPage: number,
-        currentSort: string,
         currentLikeRange: string
     ) => {
         setIsLoading(true);
@@ -66,7 +65,7 @@ const HomeScreen: React.FC = () => {
                 page: currentPage,
                 size,
                 field: FieldEnum.DATE,
-                sort: currentSort as SortEnum,
+                sort: SortEnum.DESC,
                 likeRange: currentLikeRange,
             });
             
@@ -84,7 +83,7 @@ const HomeScreen: React.FC = () => {
 
     const handleRefresh = () => {
         setRefreshing(true);
-        handleQuery(page, sort, likeRange);
+        handleQuery(page, likeRange);
     };
 
     const handlePageChange = debounce((newPage: number) => {
@@ -105,7 +104,7 @@ const HomeScreen: React.FC = () => {
     };
 
     useEffect(() => {
-        handleQuery(page, sort, likeRange);
+        handleQuery(page, likeRange);
     }, [page, likeRange]);
 
     const renderItem = ({ item }: { item: TreeHoleType }) => (
