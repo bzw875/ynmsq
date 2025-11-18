@@ -25,7 +25,7 @@ import { debounce } from '../utils';
 
 export const DEFAULT_QUERY: QueryParams = {
     page: 0,
-    size: 20,
+    size: 10,
     field: FieldEnum.DATE,
     sort: SortEnum.DESC,
     likeRange: RangeNum.NoLimit,
@@ -34,7 +34,6 @@ export const DEFAULT_QUERY: QueryParams = {
 type RootStackParamList = {
     HomeTab: {
         page?: number;
-        size?: number;
         field?: string;
         sort?: string;
         likeRange?: string;
@@ -48,18 +47,16 @@ const HomeScreen: React.FC = () => {
     
     const [treeHoles, setTreeHoles] = useState<TreeHoleType[]>([]);
     const [page, setPage] = useState(initialParams.page || DEFAULT_QUERY.page);
-    const [size, setSize] = useState(initialParams.size || DEFAULT_QUERY.size);
     const [total, setTotal] = useState(0);
     const [field, setField] = useState(initialParams.field || DEFAULT_QUERY.field);
     const [sort, setSort] = useState(initialParams.sort || DEFAULT_QUERY.sort);
     const [likeRange, setLikeRange] = useState(initialParams.likeRange || DEFAULT_QUERY.likeRange);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const size = 10;
 
     const handleQuery = async (
         currentPage: number,
-        currentSize: number,
-        currentField: string,
         currentSort: string,
         currentLikeRange: string
     ) => {
@@ -67,8 +64,8 @@ const HomeScreen: React.FC = () => {
         try {
             const response = await apiService.fetchAllTreeHole({
                 page: currentPage,
-                size: currentSize,
-                field: currentField as FieldEnum,
+                size,
+                field: FieldEnum.DATE,
                 sort: currentSort as SortEnum,
                 likeRange: currentLikeRange,
             });
@@ -87,25 +84,11 @@ const HomeScreen: React.FC = () => {
 
     const handleRefresh = () => {
         setRefreshing(true);
-        handleQuery(page, size, field, sort, likeRange);
+        handleQuery(page, sort, likeRange);
     };
 
     const handlePageChange = debounce((newPage: number) => {
         setPage(newPage);
-    }, 300);
-
-    const handleSizeChange = debounce((newSize: number) => {
-        setSize(newSize);
-        setPage(0);
-    }, 300);
-
-    const handleFieldChange = debounce((newField: FieldEnum) => {
-        setField(newField);
-        setPage(0);
-    }, 300);
-
-    const handleSortChange = debounce((newSort: SortEnum) => {
-        setSort(newSort);
     }, 300);
 
     const handleLikeRangeChange = debounce((newRange: RangeNum) => {
@@ -122,8 +105,8 @@ const HomeScreen: React.FC = () => {
     };
 
     useEffect(() => {
-        handleQuery(page, size, field, sort, likeRange);
-    }, [page, size, field, sort, likeRange]);
+        handleQuery(page, sort, likeRange);
+    }, [page, likeRange]);
 
     const renderItem = ({ item }: { item: TreeHoleType }) => (
         <TreeHoleCell treeHole={item} />
@@ -151,23 +134,18 @@ const HomeScreen: React.FC = () => {
                     </TouchableOpacity>
                 </View>
             </View>
-            
-            <NavigatorBar
-                page={page}
-                size={size}
-                total={total}
-                sort={sort as SortEnum}
-                field={field as FieldEnum}
-                onPageChange={handlePageChange}
-                onSizeChange={handleSizeChange}
-                onFieldChange={handleFieldChange}
-                onSortChange={handleSortChange}
-            />
-            
-            <FilterBar 
-                likeRange={likeRange as RangeNum} 
-                onLikeRangeChange={handleLikeRangeChange} 
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, paddingHorizontal: 8 }}>
+                <NavigatorBar
+                    page={page}
+                    size={size}
+                    total={total}
+                    onPageChange={handlePageChange}
+                />
+                <FilterBar 
+                    likeRange={likeRange as RangeNum} 
+                    onLikeRangeChange={handleLikeRangeChange} 
+                />
+            </View>
             
             {isLoading && treeHoles.length === 0 ? (
                 <View style={styles.loader}>

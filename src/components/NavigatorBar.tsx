@@ -7,28 +7,16 @@ interface NavigatorBarProps {
     page: number;
     size: number;
     total: number;
-    sort: SortEnum;
-    field: FieldEnum;
     onPageChange: (page: number) => void;
-    onSizeChange: (size: number) => void;
-    onSortChange: (sort: SortEnum) => void;
-    onFieldChange: (field: FieldEnum) => void;
 }
 
-const sizeList = [10, 25, 50, 100, 200, 400];
-const fieldList = [FieldEnum.DATE, FieldEnum.LIKE, FieldEnum.DISLIKE, FieldEnum.COMMENT];
-const fieldNameList = ['日期', '喜欢', '不喜欢', '评论'];
+
 
 const NavigatorBar: React.FC<NavigatorBarProps> = ({
     page,
     size,
     total,
-    sort,
-    field,
     onPageChange,
-    onSizeChange,
-    onSortChange,
-    onFieldChange,
 }) => {
     const pages = Math.ceil(total / size);
     
@@ -51,9 +39,6 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
         return arr;
     }, [total, size, page, pages]);
 
-    const handleSort = () => {
-        onSortChange(sort === SortEnum.ASC ? SortEnum.DESC : SortEnum.ASC);
-    };
 
     if (total === 0) {
         return null;
@@ -93,47 +78,6 @@ const NavigatorBar: React.FC<NavigatorBarProps> = ({
                         <Text style={styles.paginationButton}>下一页</Text>
                     </TouchableOpacity>
                 )}
-            </View>
-            
-            <View style={styles.sizeSelector}>
-                <Text style={styles.label}>每页条数:</Text>
-                <Picker
-                    selectedValue={size}
-                    onValueChange={(itemValue) => onSizeChange(Number(itemValue))}
-                    style={Platform.OS === 'ios' ? styles.iosPicker : styles.androidPicker}
-                >
-                    {sizeList.map((itemSize) => (
-                        <Picker.Item key={itemSize} label={String(itemSize)} value={itemSize} />
-                    ))}
-                </Picker>
-            </View>
-            
-            <View style={styles.sortContainer}>
-                <TouchableOpacity onPress={handleSort} style={styles.sortButton}>
-                    <Text style={styles.sortButtonText}>
-                        {sort === SortEnum.ASC ? '↑' : '↓'}
-                    </Text>
-                </TouchableOpacity>
-                
-                {fieldList.map((fieldItem, index) => (
-                    <TouchableOpacity
-                        key={fieldItem}
-                        onPress={() => onFieldChange(fieldItem)}
-                        style={[
-                            styles.fieldButton,
-                            field === fieldItem && styles.activeFieldButton
-                        ]}
-                    >
-                        <Text 
-                            style={[
-                                styles.fieldButtonText,
-                                field === fieldItem && styles.activeFieldButtonText
-                            ]}
-                        >
-                            {fieldNameList[index]}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
             </View>
         </View>
     );
@@ -187,10 +131,12 @@ const styles = StyleSheet.create({
     },
     iosPicker: {
         width: 100,
+        color: '#666',
         height: 40,
     },
     androidPicker: {
         width: 100,
+        color: '#666',
         height: 50,
     },
     sortContainer: {
